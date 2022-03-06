@@ -12,15 +12,15 @@ extern I2C_HandleTypeDef hi2c1;
 
 
 bool HelloDS1307(void){
-	if (HAL_I2C_IsDeviceReady(&hi2c1, 0b11010000, 1, 10)==HAL_OK){ //verifica se si colega a device temperatura
-		return 1; //successo
+	if (HAL_I2C_IsDeviceReady(&hi2c1, 0b11010000, 1, 10)==HAL_OK){ //Is it connected?
+		return 1; //success
 	}
-	return 0; //insuccesso
+	return 0; //no success
 }
 
 
-//Permette di settare il control register
-//FREQUENZA = 1, 4, 8, 32
+//Set the control register
+//Frequency[Hz] = 1, 4, 8, 32
 
 void SQW_Register(bool OUT, bool SQWE, uint8_t frequenza) {
 
@@ -86,94 +86,76 @@ void SQW_Register(bool OUT, bool SQWE, uint8_t frequenza) {
 
 	uint8_t giuseppe[2]={ControlRegister,data};
 
-	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, giuseppe, 2, 10); //Setta control Register
-
-	//HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &ControlRegister, 1, 10); //Mi collego a control register
-
-	//HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &data, 1, 10); //Setta control Register
+	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, giuseppe, 2, 10); //Set control Register
 }
 
-void ClockEnable(bool CKen) { //si osservi che il clock è abilitato di default (Disabilitare il clck riduce i consumi)
+void ClockEnable(bool CKen) { //clock enabled by default (Disable clock can reduce power consumption)
 
 	uint8_t SecondsRegister=0x00;
 	uint8_t Seconds=0x00;
 
 
 	if (CKen==1){
-		Seconds=0x00; //Setta bit CH (ClockHalt) a 0 abilitando il clock
+		Seconds=0x00; //Set bit CH (ClockHalt) to 0 enabling the clock
 	}
 	else{
-		Seconds=0x80; //Setta bit CH (ClockHalt) a 1 disabilitando il clock
+		Seconds=0x80; //Set bit CH (ClockHalt) to 1 disabling the clock
 	}
 
 
 	uint8_t CKSet[2]={SecondsRegister,Seconds};
 
-	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, CKSet, 2, 10); //Setta control Register
+	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, CKSet, 2, 10); //Sets control Register
 
 }
 
 
 
-void SettaGiorno(uint8_t giorno) {
+void SettaGiorno(uint8_t giorno) {//sets day
 	uint8_t DayRegister=0x04;
 
 	uint8_t DaySet[2]={DayRegister,giorno};
 
-	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, DaySet, 2, 10); //Setta control Register
-
-
-//	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &DayRegister, 1, 10); //Mi collego a day register
-
-//	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &giorno, 1, 10); //Setta control Register
+	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, DaySet, 2, 10); //Sets control Register
 }
 
 
-void SettaMese(uint8_t mese) {
+void SettaMese(uint8_t mese) { //sets month
 	uint8_t MonthRegister=0x05;
 
 	uint8_t MonthSet[2]={MonthRegister,mese};
 
-	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, MonthSet, 2, 10); //Setta control Register
-
-	//HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &MonthRegister, 1, 10); //Mi collego a day register
-
-	//HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &mese, 1, 10); //Setta control Register
+	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, MonthSet, 2, 10); //Sets control Register
 }
 
 
-void SettaAnno(uint8_t anno) {
+void SettaAnno(uint8_t anno) { //sets year
 	uint8_t YearRegister=0x06;
 
 	uint8_t YearSet[2]={YearRegister,anno};
 
-	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, YearSet, 2, 10); //Setta control Register
-
-
-	//HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &YearRegister, 1, 10); //Mi collego a day register
-
-	//HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &anno, 1, 10); //Setta control Register
+	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, YearSet, 2, 10); //Sets control Register
 }
 
-uint8_t LeggiSecondi(void) { //per testare che effettivamente il valore si aggiorna
+uint8_t LeggiSecondi(void) { //Reads seconds
 	uint8_t SecondsRegister=0x00;
 	uint8_t Secondi=0x00;
 
-	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &SecondsRegister, 1, 10); //Mi collego a day register
+	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &SecondsRegister, 1, 10); //Connects to seconds register
 
-	HAL_I2C_Master_Receive(&hi2c1, SLAVE_READ_ADDRESS,&Secondi , 1, 10); //Leggo Ambient Temp
+	HAL_I2C_Master_Receive(&hi2c1, SLAVE_READ_ADDRESS,&Secondi , 1, 10); 
 
 	return Secondi;
 }
 
 
-uint8_t LeggiAnno(void) {
+uint8_t LeggiAnno(void) { //reads year
 	uint8_t YearRegister=0x06;
 	uint8_t Anno=0x00;
 
-	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &YearRegister, 1, 10); //Mi collego a day register
+	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &YearRegister, 1, 10); //connects to year register
 
-	HAL_I2C_Master_Receive(&hi2c1, SLAVE_READ_ADDRESS,&Anno , 1, 10); //Leggo Ambient Temp
+	HAL_I2C_Master_Receive(&hi2c1, SLAVE_READ_ADDRESS,&Anno , 1, 10); //rads year
 
 	return Anno;
 }
@@ -183,9 +165,9 @@ uint8_t LeggiMese(void) {
 	uint8_t MonthRegister=0x05;
 	uint8_t Mese=0x00;
 
-	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &MonthRegister, 1, 10); //Mi collego a day register
+	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &MonthRegister, 1, 10); //Connects to month register
 
-	HAL_I2C_Master_Receive(&hi2c1, SLAVE_READ_ADDRESS,&Mese , 1, 10); //Leggo Ambient Temp
+	HAL_I2C_Master_Receive(&hi2c1, SLAVE_READ_ADDRESS,&Mese , 1, 10); //reads month 
 
 	return Mese;
 }
@@ -194,21 +176,17 @@ uint8_t LeggiGiorno(void) {
 	uint8_t DayRegister=0x04;
 	uint8_t Giorno=0x00;
 
-	//uint8_t robertini[2]={DayRegister,Giorno};
 
-	//HAL_I2C_Master_Receive(&hi2c1,SLAVE_READ_ADDRESS, robertini, 2, 10); //Setta control Register
+	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &DayRegister, 1, 10); //Connects to day register
 
-
-	HAL_I2C_Master_Transmit(&hi2c1,SLAVE_WRITE_ADDRESS, &DayRegister, 1, 10); //Mi collego a day register
-
-	HAL_I2C_Master_Receive(&hi2c1, SLAVE_READ_ADDRESS,&Giorno , 1, 10); //Leggo Ambient Temp
+	HAL_I2C_Master_Receive(&hi2c1, SLAVE_READ_ADDRESS,&Giorno , 1, 10); //Reads day register
 
 	return Giorno;
 }
 
 
-//Ci si ricordi che se la seguente funzione ritorna 1 bisogna aggiornare il valore MeseSveglia
-bool Sveglia(uint8_t MeseSveglia) { //funzione che ritorna 1 se il mese corrente corrisponde al mese richiesto
+//If the following function returns 1 do something (uses the timer)
+bool Sveglia(uint8_t MeseSveglia) { //returns 1 if the current month is the month requested
 
 	if (MeseSveglia==LeggiMese()){
 		return 1;
